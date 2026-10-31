@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_continue">Continue</string>
+    <string name="action_back">Back</string>
+    <string name="action_close">Close</string>
+    <string name="lesson_n">Lesson %1$s</string>
+    <string name="class_n">Class %1$s</string>
+    <string name="lesson_words_range">%1$s–%2$s</string>
+    <string name="play_pronunciation">Play pronunciation</string>
+    <string name="offline_title">No connection</string>
+    <string name="offline_message">You are not connected to the internet.\nCheck your connection, then tap Check connection.</string>
+    <string name="offline_check">Check connection</string>
+</resources>

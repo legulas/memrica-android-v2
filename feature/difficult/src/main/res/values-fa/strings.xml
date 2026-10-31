@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="difficult_title">لغات سخت کلاس %1$s</string>
+    <string name="difficult_fast_review">دوره سریع</string>
+    <string name="difficult_empty">هیچ لغت سختی موجود نیست</string>
+    <string name="difficult_min_words">حداقل %1$s کلمه باید موجود باشد</string>
+    <string name="difficult_remove">حذف از لغات سخت</string>
+</resources>

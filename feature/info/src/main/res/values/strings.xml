@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="info_title">Guide</string>
+    <string name="info_source_title">%1$s) Where the content comes from</string>
+    <string name="info_source_body">The content comes from the book %1$s Absolutely Essential Words. The translations and the learning algorithm are by the Smart Learning team.</string>
+    <string name="info_structure_title">%1$s) How the app is organized</string>
+    <string name="info_structure_body">The %1$s set is divided as follows:\n- %2$s classes in total\n- %3$s lessons in each class\n- %4$s words in each lesson</string>
+    <string name="info_progress_title">%1$s) How progress is shown</string>
+    <string name="info_progress_word">- For each word</string>
+    <string name="info_progress_lesson">- For each lesson</string>
+    <string name="info_progress_class">- For each class</string>
+    <string name="info_progress_all">- For the whole set</string>
+    <string name="info_progress_all_sample">You have completed %1$s of the whole path</string>
+    <string name="info_progress_logo">- Number of completed lessons</string>
+    <string name="info_word_page_title">%1$s) On the word list</string>
+    <string name="info_word_page_body">- Set a word\'s progress\n  from %1$s to %2$s and back\n- Add a word\n  to the class difficult words</string>
+    <string name="info_privacy_title">%1$s) Privacy policy</string>
+    <string name="info_privacy_link">Tap to read the privacy policy</string>
+
+    <string name="privacy_body">Dear users,\nWe are committed to improving the app, and for that we need to collect errors and crashes.\nErrors and crashes differ between devices and Android versions, so we collect them together with the Android version and device type. This happens automatically, only while you use the app, through a third-party cloud service.\nBy studying how people use the app we can also improve it step by step.\nFor errors and crashes we collect things like the type and time of the error, the Android version and the device type; the full list is in the privacy policy linked below.\nFor usage we collect things like how long the app is used, the user\'s country and city and the device maker; the full list is in the privacy policy linked below.</string>
+    <string name="privacy_accept_note">As explained above, using the app means you accept the privacy policy.</string>
+
+    <string name="smart_title">Smart learning</string>
+    <string name="smart_toc">Part 1: Brain circuits\nPart 2: How the app works\nPart 3: A roadmap for memorizing words</string>
+    <string name="smart_part1_title">Part 1: Brain circuits</string>
+    <string name="smart_part1_intro">This app is designed around how the brain learns and forms circuits, so we start with a short look at how that works.</string>
+    <string name="smart_brain_title">The brain, a miracle</string>
+    <string name="smart_brain_body">The brain has billions of cells, and learning happens when a path between cells is built or strengthened. A new path forms a brain circuit, like this:</string>
+    <string name="smart_synapse_gap">When learning starts, electrical pulses try to cross from one cell to another, but there is a gap between them:</string>
+    <string name="smart_synapse_built">With repetition the pulses grow stronger until the gap is bridged, a new circuit is built and learning happens:</string>
+    <string name="smart_part1_outro">There is much more to say about the brain, but this short introduction is enough for now.</string>
+    <string name="smart_part2_title">Part 2: How the app works</string>
+    <string name="smart_part2_intro">We built the app around this ability of the brain, and split repetition into two stages that bring a word into memory:</string>
+    <string name="smart_stages">%1$s) Into short-term memory\n%2$s) Into long-term memory</string>
+    <string name="smart_implementation_title">How the two stages work in the app</string>
+    <string name="smart_short_term_title">%1$s) Into short-term memory:</string>
+    <string name="smart_short_term_intro">This stage is the Learn button on each lesson page, which runs the learning algorithm:</string>
+    <string name="smart_short_term_body">Each lesson has %1$s words, taught in three groups of four. %2$s words are ready to learn at a time; when their steps are finished, the next %2$s words are ready.\nThe algorithm repeats them in a smart, automatic order that works best for short-term memory.\nWe suggest you focus on the words at this stage and leave the example sentences for later.</string>
+    <string name="smart_long_term_title">%1$s) Into long-term memory:</string>
+    <string name="smart_long_term_intro">This stage is the \"Fast review\", at three levels:\n - Fast review of each lesson\n - Fast review of each class\n - Fast review of each class\'s difficult words</string>
+    <string name="smart_long_term_body">A lesson review repeats %1$s words and takes %2$s to %3$s seconds.\nA class review covers several lessons at once: any number of the class\'s %4$s lessons, quickly and together. It can have %5$s to %6$s words.</string>
+    <string name="smart_part3_title">Part 3: A roadmap for memorizing words</string>
+    <string name="smart_part3_intro">Getting a word into memory means building a circuit for it, and that takes repetition, repetition and repetition.\n\nThe roadmap is simple:</string>
+    <string name="smart_roadmap">Step 1:\nFully learn each lesson\'s words\n(reset words and learn again if needed)\n\nStep 2:\nFast review each lesson (many times)\n\nStep 3:\nWith each new lesson learned, fast review the class (many times)\n\nStep 4:\nMark difficult words and fast review them (many times)</string>
+    <string name="smart_closing">And once more:\nrepeat, repeat, repeat\nor in other words\nfast review, fast review, fast review</string>
+
+    <string name="share_title">Tell your friends</string>
+    <string name="share_body">You can send the app\'s link to your friends</string>
+    <string name="share_copy">Copy link</string>
+    <string name="share_copied">Link copied</string>
+
+    <string name="shop_title">Shop</string>
+    <string name="shop_body">Dear users,\nAs we announced, we have been working to make the app completely free.\n\nFrom now on every part of the app works without coins.</string>
+
+    <string name="help_title">Help improve the app</string>
+    <string name="help_body">Dear friends,\nif you find a bug in the app,\nplease send us a description and a screenshot\nthrough the page below.</string>
+    <string name="help_open_page">Open the app\'s page</string>
+</resources>

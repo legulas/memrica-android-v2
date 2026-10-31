@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="learning_finished_message">مراحل یادگیری به پایان رسید.\nمیتوانید کلمات دلخواهتان را ریست کنید و مجددا یادگیری را انجام دهید</string>
+    <string name="learning_back_to_lesson">بازگشت به درس %1$s</string>
+    <string name="learning_read_sentence">خواندن جمله</string>
+</resources>

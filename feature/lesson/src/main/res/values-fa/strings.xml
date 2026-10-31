@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lesson_range">%1$s تا %2$s</string>
+    <string name="lesson_learn">یادگیری</string>
+    <string name="lesson_fast_review">دوره سریع</string>
+    <string name="lesson_learning_complete">یادگیری کامل شده است ، امکان ریست کلمات دلخواه و شروع مجدد یادگیری وجود دارد</string>
+    <string name="lesson_learn_first">ابتدا کلمات این درس را کامل یاد بگیرید</string>
+    <string name="lesson_added_difficult">به لیست لغات سخت کلاس اضافه شد</string>
+    <string name="lesson_removed_difficult">از لیست لغات سخت کلاس خارج شد</string>
+    <string name="lesson_mark_difficult">لغت سخت</string>
+    <string name="lesson_mark_known">یاد گرفته شده</string>
+</resources>

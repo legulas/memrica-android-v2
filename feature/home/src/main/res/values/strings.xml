@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_overall">You have completed %1$s of the whole path</string>
+    <string name="home_class_progress">Progress in each class</string>
+    <string name="home_help_improve">Help improve the app</string>
+    <string name="home_class_list">Classes</string>
+    <string name="home_class_quiz">Quiz | Fast review</string>
+    <string name="home_class_difficult">Class difficult words</string>
+    <string name="home_need_five_learned">At least 5 words must be completed</string>
+    <string name="home_info">Guide</string>
+    <string name="home_smart_learning">Smart learning</string>
+    <string name="home_share">Share</string>
+    <string name="home_shop">Shop</string>
+    <string name="home_completed_lessons">%1$s lessons completed</string>
+</resources>

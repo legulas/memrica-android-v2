@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="word_sentence_tab">جمله %1$s</string>
+    <string name="word_read_sentence">خواندن جمله</string>
+</resources>

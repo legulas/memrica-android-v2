@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auth_title">Save your progress</string>
+    <string name="auth_subtitle">Create an account or sign in to keep your learning safe. You can skip this and keep learning.</string>
+    <string name="auth_tab_sign_up">Sign up</string>
+    <string name="auth_tab_sign_in">Sign in</string>
+    <string name="auth_method_email">Email</string>
+    <string name="auth_method_phone">Phone</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_phone">Phone number</string>
+    <string name="auth_phone_hint">With country code, e.g. +989121234567</string>
+    <string name="auth_code">6-digit code</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_new_password">New password</string>
+    <string name="auth_password_hint">At least 8 characters</string>
+    <string name="auth_send_code">Send code</string>
+    <string name="auth_code_sent_email">We sent a code to %1$s</string>
+    <string name="auth_code_sent_phone">We sent a code to %1$s</string>
+    <string name="auth_create_account">Create account</string>
+    <string name="auth_sign_in">Sign in</string>
+    <string name="auth_verify">Verify</string>
+    <string name="auth_forgot_password">Forgot password?</string>
+    <string name="auth_reset_password">Reset password</string>
+    <string name="auth_change">Change</string>
+    <string name="auth_skip">Skip</string>
+    <string name="auth_error_connection">Couldn\'t connect. Check your internet and try again.</string>
+    <string name="auth_error_credentials">Wrong email or password</string>
+    <string name="auth_error_code">The code is wrong or has expired</string>
+    <string name="auth_error_exists">An account with this email already exists. Sign in instead.</string>
+    <string name="auth_error_rate">Too many tries. Please wait a moment.</string>
+    <string name="auth_error_unexpected">Something went wrong. Please try again.</string>
+    <string name="auth_error_email">Enter a valid email</string>
+    <string name="auth_error_phone">Enter the number with country code, like +98…</string>
+    <string name="auth_error_password">The password must be 8 to 72 characters</string>
+    <string name="auth_error_code_format">Enter the 6-digit code</string>
+</resources>

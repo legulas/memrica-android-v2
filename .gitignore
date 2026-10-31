@@ -33,3 +33,9 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Release signing config
+keystore.properties
+
+# macOS
+.DS_Store

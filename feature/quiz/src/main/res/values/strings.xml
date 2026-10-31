@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quiz_ready_words">Words ready: %1$s</string>
+    <string name="quiz_words_in_test">Words in this quiz</string>
+    <string name="quiz_right">Right answers</string>
+    <string name="quiz_wrong">Wrong answers</string>
+    <string name="quiz_new_record">New record</string>
+    <string name="quiz_record">(Record: %1$s)</string>
+    <string name="quiz_wrong_list">Wrong answers</string>
+    <string name="quiz_wrong_list_hint">You can add words to the difficult list and review them many times</string>
+    <string name="quiz_no_wrong">No wrong answers</string>
+    <string name="quiz_right_count">%1$s right</string>
+    <string name="quiz_wrong_count">%1$s wrong</string>
+    <string name="quiz_mark_difficult">Difficult word</string>
+    <string name="quiz_unavailable">This quiz isn\'t available yet</string>
+</resources>

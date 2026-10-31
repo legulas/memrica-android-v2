@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quiz_ready_words">کلمات آماده: %1$s</string>
+    <string name="quiz_words_in_test">کلمات این آزمون</string>
+    <string name="quiz_right">جواب های درست</string>
+    <string name="quiz_wrong">جواب های اشتباه</string>
+    <string name="quiz_new_record">رکورد جدید</string>
+    <string name="quiz_record">( رکورد: %1$s )</string>
+    <string name="quiz_wrong_list">لیست جواب های اشتباه</string>
+    <string name="quiz_wrong_list_hint">می توانید کلمات مورد نظرتان را به لیست\nلغات سخت اضافه کنید و بارها مرور کنید</string>
+    <string name="quiz_no_wrong">هیچ جواب اشتباهی وجود ندارد</string>
+    <string name="quiz_right_count">%1$s درست</string>
+    <string name="quiz_wrong_count">%1$s اشتباه</string>
+    <string name="quiz_mark_difficult">لغت سخت</string>
+    <string name="quiz_unavailable">این آزمون هنوز در دسترس نیست</string>
+</resources>

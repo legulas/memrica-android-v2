@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_overall">شما %1$s کل مسیر را پیموده اید</string>
+    <string name="home_class_progress">میزان پیشرفت در هر کلاس</string>
+    <string name="home_help_improve">کمک به بهبود برنامه</string>
+    <string name="home_class_list">لیست کلاس ها</string>
+    <string name="home_class_quiz">آزمون | دوره سریع</string>
+    <string name="home_class_difficult">لغات سخت کلاس</string>
+    <string name="home_need_five_learned">حداقل ۵ کلمه باید کامل شده باشد</string>
+    <string name="home_info">راهنما</string>
+    <string name="home_smart_learning">مطالعه هوشمندانه</string>
+    <string name="home_share">معرفی به دوستان</string>
+    <string name="home_shop">فروشگاه</string>
+    <string name="home_completed_lessons">%1$s درس کامل شده</string>
+</resources>

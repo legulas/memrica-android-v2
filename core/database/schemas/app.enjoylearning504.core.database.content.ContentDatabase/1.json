@@ -1,0 +1,196 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "44b1d43dfb42096a146f37d75d161c84",
+    "entities": [
+      {
+        "tableName": "classes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "lessons",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `class_id` INTEGER NOT NULL, `number_in_class` INTEGER NOT NULL, `first_word_id` INTEGER NOT NULL, `last_word_id` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "classId",
+            "columnName": "class_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "numberInClass",
+            "columnName": "number_in_class",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "firstWordId",
+            "columnName": "first_word_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastWordId",
+            "columnName": "last_word_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_lessons_class_id",
+            "unique": false,
+            "columnNames": [
+              "class_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_lessons_class_id` ON `${TABLE_NAME}` (`class_id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "words",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `lesson_id` INTEGER NOT NULL, `class_id` INTEGER NOT NULL, `english` TEXT NOT NULL, `persian` TEXT NOT NULL, `synonyms` TEXT, `phonetic` TEXT, `part_of_speech` TEXT, `sentence_en_1` TEXT, `sentence_fa_1` TEXT, `sentence_en_2` TEXT, `sentence_fa_2` TEXT, `sentence_en_3` TEXT, `sentence_fa_3` TEXT, `audio_asset` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lessonId",
+            "columnName": "lesson_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "classId",
+            "columnName": "class_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "english",
+            "columnName": "english",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "persian",
+            "columnName": "persian",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "synonyms",
+            "columnName": "synonyms",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "phonetic",
+            "columnName": "phonetic",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "partOfSpeech",
+            "columnName": "part_of_speech",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sentenceEn1",
+            "columnName": "sentence_en_1",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sentenceFa1",
+            "columnName": "sentence_fa_1",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sentenceEn2",
+            "columnName": "sentence_en_2",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sentenceFa2",
+            "columnName": "sentence_fa_2",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sentenceEn3",
+            "columnName": "sentence_en_3",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sentenceFa3",
+            "columnName": "sentence_fa_3",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "audioAsset",
+            "columnName": "audio_asset",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_words_lesson_id",
+            "unique": false,
+            "columnNames": [
+              "lesson_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_words_lesson_id` ON `${TABLE_NAME}` (`lesson_id`)"
+          },
+          {
+            "name": "index_words_class_id",
+            "unique": false,
+            "columnNames": [
+              "class_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_words_class_id` ON `${TABLE_NAME}` (`class_id`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '44b1d43dfb42096a146f37d75d161c84')"
+    ]
+  }
+}

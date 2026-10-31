@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="learning_finished_message">The learning steps are finished.\nYou can reset any words and learn them again.</string>
+    <string name="learning_back_to_lesson">Back to lesson %1$s</string>
+    <string name="learning_read_sentence">Read the sentence aloud</string>
+</resources>

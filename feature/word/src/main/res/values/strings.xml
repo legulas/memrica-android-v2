@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="word_sentence_tab">Sentence %1$s</string>
+    <string name="word_read_sentence">Read the sentence aloud</string>
+</resources>
