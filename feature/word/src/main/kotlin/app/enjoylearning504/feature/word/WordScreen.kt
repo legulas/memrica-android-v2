@@ -21,7 +21,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.enjoylearning504.core.ads.AdPlacement
 import app.enjoylearning504.core.ads.NativeAdBanner
 import app.enjoylearning504.core.model.WordWithProgress
-import app.enjoylearning504.core.ui.OfflineGate
 import app.enjoylearning504.core.ui.SentencePager
 import app.enjoylearning504.core.ui.WordCard
 import org.koin.compose.viewmodel.koinViewModel
@@ -29,7 +28,6 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun WordRoute(viewModel: WordViewModel = koinViewModel()) {
     val word by viewModel.word.collectAsStateWithLifecycle()
-    OfflineGate()
     WordScreen(word, viewModel::playWord, viewModel::speak)
 }
 

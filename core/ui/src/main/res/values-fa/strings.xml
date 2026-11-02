@@ -7,7 +7,4 @@
     <string name="class_n">کلاس %1$s</string>
     <string name="lesson_words_range">%1$s - %2$s</string>
     <string name="play_pronunciation">پخش تلفظ</string>
-    <string name="offline_title">قطع اتصال</string>
-    <string name="offline_message">اتصال به اینترنت برقرار نیست !\nبعد از اطمینان از اتصال اینترنت دکمه بررسی کانکشن را بزنید.</string>
-    <string name="offline_check">بررسی کانکشن</string>
 </resources>

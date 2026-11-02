@@ -51,7 +51,6 @@ import app.enjoylearning504.core.domain.quiz.QuizMode
 import app.enjoylearning504.core.domain.usecase.QuizResult
 import app.enjoylearning504.core.model.WordWithProgress
 import app.enjoylearning504.core.ui.AnswerGrid
-import app.enjoylearning504.core.ui.OfflineGate
 import app.enjoylearning504.core.ui.R as UiR
 import app.enjoylearning504.core.ui.localizedNumber
 import org.koin.compose.viewmodel.koinViewModel
@@ -63,7 +62,6 @@ fun QuizRoute(onExit: () -> Unit, viewModel: QuizViewModel = koinViewModel()) {
     val wrongWords by viewModel.wrongWords.collectAsStateWithLifecycle()
     val exit = rememberInterstitialExit(viewModel.mode.interstitial(), enabled = showAd)
     BackHandler { exit(onExit) }
-    OfflineGate()
     QuizScreen(
         mode = viewModel.mode,
         state = state,

@@ -39,7 +39,6 @@ import app.enjoylearning504.core.model.Word
 import app.enjoylearning504.core.model.WordLevel
 import app.enjoylearning504.core.model.WordWithProgress
 import app.enjoylearning504.core.ui.AnswerGrid
-import app.enjoylearning504.core.ui.OfflineGate
 import app.enjoylearning504.core.ui.R as UiR
 import app.enjoylearning504.core.ui.SentencePager
 import app.enjoylearning504.core.ui.WordCard
@@ -51,7 +50,6 @@ fun LearningRoute(onExit: () -> Unit, viewModel: LearningViewModel = koinViewMod
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val exit = rememberInterstitialExit(AdPlacement.InterstitialLearning, enabled = state.showAdOnExit)
     BackHandler { exit(onExit) }
-    OfflineGate()
     LearningScreen(
         state = state,
         onContinue = viewModel::onContinue,

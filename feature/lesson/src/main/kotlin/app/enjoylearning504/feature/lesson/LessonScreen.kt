@@ -50,7 +50,6 @@ import app.enjoylearning504.core.designsystem.theme.MemricaColors
 import app.enjoylearning504.core.domain.usecase.LessonDetail
 import app.enjoylearning504.core.model.PlantStage
 import app.enjoylearning504.core.model.WordWithProgress
-import app.enjoylearning504.core.ui.OfflineGate
 import app.enjoylearning504.core.ui.R as UiR
 import app.enjoylearning504.core.ui.localizedNumber
 import app.enjoylearning504.core.ui.localizedPercent
@@ -64,7 +63,6 @@ fun LessonRoute(
     viewModel: LessonViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    OfflineGate()
     LessonScreen(
         state = state,
         onLearn = { if (viewModel.canLearn()) onLearn(viewModel.lessonId) },

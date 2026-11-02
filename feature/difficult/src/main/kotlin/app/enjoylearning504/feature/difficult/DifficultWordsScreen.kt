@@ -41,7 +41,6 @@ import app.enjoylearning504.core.designsystem.component.WordLevelIcon
 import app.enjoylearning504.core.designsystem.theme.MemricaColors
 import app.enjoylearning504.core.domain.quiz.QuizBuilder
 import app.enjoylearning504.core.model.WordWithProgress
-import app.enjoylearning504.core.ui.OfflineGate
 import app.enjoylearning504.core.ui.localizedNumber
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -52,7 +51,6 @@ fun DifficultWordsRoute(
     viewModel: DifficultWordsViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    OfflineGate()
     DifficultWordsScreen(
         state = state,
         onFastReview = { if (viewModel.canStartReview()) onFastReview(viewModel.classId) },

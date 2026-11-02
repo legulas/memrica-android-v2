@@ -7,7 +7,4 @@
     <string name="class_n">Class %1$s</string>
     <string name="lesson_words_range">%1$s–%2$s</string>
     <string name="play_pronunciation">Play pronunciation</string>
-    <string name="offline_title">No connection</string>
-    <string name="offline_message">You are not connected to the internet.\nCheck your connection, then tap Check connection.</string>
-    <string name="offline_check">Check connection</string>
 </resources>

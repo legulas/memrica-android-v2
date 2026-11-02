@@ -9,7 +9,6 @@ import app.enjoylearning504.core.data.repository.PreferencesAppStateRepository
 import app.enjoylearning504.core.data.repository.StoredTokenProvider
 import app.enjoylearning504.core.database.databaseModule
 import app.enjoylearning504.core.datastore.dataStoreModule
-import app.enjoylearning504.core.domain.platform.ConnectivityObserver
 import app.enjoylearning504.core.domain.repository.AppStateRepository
 import app.enjoylearning504.core.domain.repository.AuthRepository
 import app.enjoylearning504.core.domain.repository.ContentRepository
@@ -31,5 +30,4 @@ val dataModule = module {
     single<TokenProvider> { StoredTokenProvider(get()) }
     single<AuthRepository> { DefaultAuthRepository(get(), get()) }
     single<LegacyDataMigrator> { LegacyDatabaseMigrator(androidContext(), get(), get()) }
-    single<ConnectivityObserver> { AndroidConnectivityObserver(androidContext()) }
 }
