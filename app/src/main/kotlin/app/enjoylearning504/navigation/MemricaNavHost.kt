@@ -34,13 +34,13 @@ fun MemricaNavHost(start: StartDestination, navController: NavHostController = r
     NavHost(
         navController = navController,
         startDestination = when (start) {
-            StartDestination.AuthPrompt -> AuthPromptDestination
+            is StartDestination.AuthPrompt -> AuthPromptDestination(start.upgradedFromOldApp)
             StartDestination.Home -> HomeDestination
         },
     ) {
         authPromptScreen(onDone = {
             navController.navigate(HomeDestination) {
-                popUpTo(AuthPromptDestination) { inclusive = true }
+                popUpTo<AuthPromptDestination> { inclusive = true }
             }
         })
         homeScreen(

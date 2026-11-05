@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 class PreferencesAppStateRepository(private val prefs: AppPreferences) : AppStateRepository {
     override val authPromptShown: Flow<Boolean> = prefs.authPromptShown
     override val privacyNoticeShown: Flow<Boolean> = prefs.privacyNoticeShown
+    override val legacyDataMigrated: Flow<Boolean> = prefs.legacyMigrationDone
     override suspend fun markAuthPromptShown() { prefs.setAuthPromptShown() }
     override suspend fun markPrivacyNoticeShown() { prefs.setPrivacyNoticeShown() }
 }

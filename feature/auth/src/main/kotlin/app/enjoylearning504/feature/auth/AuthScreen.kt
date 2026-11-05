@@ -44,11 +44,12 @@ import app.enjoylearning504.core.model.AppError
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun AuthRoute(onDone: () -> Unit, viewModel: AuthViewModel = koinViewModel()) {
+fun AuthRoute(upgradedFromOldApp: Boolean, onDone: () -> Unit, viewModel: AuthViewModel = koinViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(state.finished) { if (state.finished) onDone() }
     AuthScreen(
         state = state,
+        upgradedFromOldApp = upgradedFromOldApp,
         onPhone = viewModel::onPhone,
         onCode = viewModel::onCode,
         onSubmit = viewModel::submit,
@@ -62,6 +63,7 @@ fun AuthRoute(onDone: () -> Unit, viewModel: AuthViewModel = koinViewModel()) {
 @Composable
 internal fun AuthScreen(
     state: AuthUiState,
+    upgradedFromOldApp: Boolean,
     onPhone: (String) -> Unit,
     onCode: (String) -> Unit,
     onSubmit: () -> Unit,
@@ -76,19 +78,22 @@ internal fun AuthScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(Modifier.height(24.dp))
+                // People coming from the original app have progress to lose, so they get the pitch
                 Text(
-                    stringResource(R.string.auth_title),
+                    stringResource(if (upgradedFromOldApp) R.string.auth_title_upgrade else R.string.auth_title),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MemricaColors.TextStrong,
                     modifier = Modifier.semantics { heading() },
                 )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    stringResource(R.string.auth_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                if (upgradedFromOldApp) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        stringResource(R.string.auth_subtitle_upgrade),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Spacer(Modifier.height(24.dp))
                 Form(state, onPhone, onCode, onSubmit, onEditPhone, onResend)
                 state.error?.let {
@@ -107,7 +112,9 @@ internal fun AuthScreen(
                     PrimaryButton(stringResource(state.submitLabel()), onSubmit, Modifier.fillMaxWidth())
                 }
                 Spacer(Modifier.height(12.dp))
-                TextButton(onClick = onSkip, enabled = !state.isBusy) { Text(stringResource(R.string.auth_skip)) }
+                TextButton(onClick = onSkip, enabled = !state.isBusy) {
+                    Text(stringResource(if (upgradedFromOldApp) R.string.auth_continue_as_guest else R.string.auth_sign_in_as_guest))
+                }
             }
         }
     }

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="auth_title">Save your progress</string>
-    <string name="auth_subtitle">Sign in or sign up with your mobile number to keep your learning safe. You can skip this and keep learning.</string>
+    <string name="auth_title">Sign in or sign up</string>
+    <string name="auth_title_upgrade">Save your progress</string>
+    <string name="auth_subtitle_upgrade">Sign in or sign up with your mobile number to keep your learning safe. You can skip this and keep learning.</string>
     <string name="auth_phone">Mobile number</string>
     <string name="auth_phone_hint">09121112223</string>
     <string name="auth_code">6-digit code</string>
@@ -11,7 +12,8 @@
     <string name="auth_change">Change</string>
     <string name="auth_resend">Resend code</string>
     <string name="auth_timer" translatable="false">%1$02d:%2$02d</string>
-    <string name="auth_skip">Skip</string>
+    <string name="auth_continue_as_guest">Continue as guest</string>
+    <string name="auth_sign_in_as_guest">Sign in as guest</string>
     <string name="auth_error_connection">Couldn\'t connect. Check your internet and try again.</string>
     <string name="auth_error_code">The code is wrong or has expired</string>
     <string name="auth_error_rate">Too many tries. Please wait a moment.</string>

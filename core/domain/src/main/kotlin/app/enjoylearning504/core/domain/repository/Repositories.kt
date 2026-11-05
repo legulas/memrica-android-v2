@@ -32,6 +32,8 @@ interface ProgressRepository {
 interface AppStateRepository {
     val authPromptShown: Flow<Boolean>
     val privacyNoticeShown: Flow<Boolean>
+    /** The original (pre-v2) app's data was moved into this app. */
+    val legacyDataMigrated: Flow<Boolean>
     suspend fun markAuthPromptShown()
     suspend fun markPrivacyNoticeShown()
 }

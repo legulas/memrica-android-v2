@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="auth_title">پیشرفتتان را ذخیره کنید</string>
-    <string name="auth_subtitle">برای حفظ پیشرفت یادگیری، با شماره موبایل وارد شوید یا ثبت نام کنید. می توانید این مرحله را رد کنید و یادگیری را ادامه دهید.</string>
+    <string name="auth_title">ورود یا ثبت نام</string>
+    <string name="auth_title_upgrade">پیشرفتتان را ذخیره کنید</string>
+    <string name="auth_subtitle_upgrade">برای حفظ پیشرفت یادگیری، با شماره موبایل وارد شوید یا ثبت نام کنید. می توانید این مرحله را رد کنید و یادگیری را ادامه دهید.</string>
     <string name="auth_phone">شماره موبایل</string>
     <string name="auth_phone_hint">09121112223</string>
     <string name="auth_code">کد ۶ رقمی</string>
@@ -10,7 +11,8 @@
     <string name="auth_verify">تایید</string>
     <string name="auth_change">تغییر</string>
     <string name="auth_resend">ارسال مجدد کد</string>
-    <string name="auth_skip">رد کردن</string>
+    <string name="auth_continue_as_guest">ادامه به عنوان مهمان</string>
+    <string name="auth_sign_in_as_guest">ورود به عنوان مهمان</string>
     <string name="auth_error_connection">اتصال برقرار نشد. اینترنت را بررسی کنید و دوباره تلاش کنید.</string>
     <string name="auth_error_code">کد اشتباه است یا منقضی شده</string>
     <string name="auth_error_rate">تلاش های زیادی انجام شده. کمی صبر کنید.</string>

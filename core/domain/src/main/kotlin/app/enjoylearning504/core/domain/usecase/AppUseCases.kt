@@ -11,7 +11,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-enum class StartDestination { AuthPrompt, Home }
+sealed interface StartDestination {
+    /** [upgradedFromOldApp]: the original app's data was found, so there is progress worth saving. */
+    data class AuthPrompt(val upgradedFromOldApp: Boolean) : StartDestination
+    data object Home : StartDestination
+}
 
 /**
  * Everything that must happen before the first screen: move the original app's data across,
@@ -31,7 +35,13 @@ class PrepareAppStartUseCase(
         backgroundScope.launch { runCatching { remoteConfig.refresh() } }
         backgroundScope.launch { auth.ensureGuestSession() }
         backgroundScope.launch { keepProgressSynced() }
-        val destination = if (appState.authPromptShown.first()) StartDestination.Home else StartDestination.AuthPrompt
+        val destination = if (appState.authPromptShown.first()) {
+            StartDestination.Home
+        } else {
+            // Migrated on an earlier launch counts too: the app may have closed on the prompt
+            val upgraded = migration != LegacyMigrationResult.NothingToMigrate || appState.legacyDataMigrated.first()
+            StartDestination.AuthPrompt(upgradedFromOldApp = upgraded)
+        }
         return destination to migration
     }
 }
