@@ -39,6 +39,18 @@ class MemricaClientTest {
     }
 
     @Test
+    fun `email sign-in sends auth_type email`() = runTest {
+        // A default value would be left out of the JSON, and the server requires the field
+        val engine = MockEngine { request ->
+            assertEquals("/auth/login", request.url.encodedPath)
+            assertTrue(String(request.body.toByteArray()).contains("\"auth_type\":\"email\""))
+            respond(authBody("a1"), HttpStatusCode.OK, json)
+        }
+        val api = AuthApi(HttpClientFactory.memricaClient(FakeTokens(null), engine, "http://test/"))
+        assertTrue(api.login("a@b.co", "password1") is NetworkResult.Success)
+    }
+
+    @Test
     fun `a 401 refreshes the token once and retries the request`() = runTest {
         val seen = mutableListOf<String>()
         val engine = MockEngine { request ->

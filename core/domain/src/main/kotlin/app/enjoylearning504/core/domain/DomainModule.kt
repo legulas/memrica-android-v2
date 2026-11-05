@@ -3,6 +3,7 @@ package app.enjoylearning504.core.domain
 import app.enjoylearning504.core.domain.ads.AdTurnPolicy
 import app.enjoylearning504.core.domain.learning.LearningSessionEngine
 import app.enjoylearning504.core.domain.quiz.QuizBuilder
+import app.enjoylearning504.core.domain.sync.KeepProgressSyncedUseCase
 import app.enjoylearning504.core.domain.usecase.BuildQuizUseCase
 import app.enjoylearning504.core.domain.usecase.CompleteAuthPromptUseCase
 import app.enjoylearning504.core.domain.usecase.FinishQuizUseCase
@@ -43,5 +44,6 @@ val domainModule = module {
     factoryOf(::FinishQuizUseCase)
     factoryOf(::CompleteAuthPromptUseCase)
     factoryOf(::ShouldShowInterstitialUseCase)
-    factory { PrepareAppStartUseCase(get(), get(), get(), get(), get(AppScope)) }
+    factoryOf(::KeepProgressSyncedUseCase)
+    factory { PrepareAppStartUseCase(get(), get(), get(), get(), get(), get(AppScope)) }
 }

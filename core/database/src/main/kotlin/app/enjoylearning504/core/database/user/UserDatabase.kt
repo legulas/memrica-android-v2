@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-/** The user's own data. Never destructive: every schema change needs a migration. */
+/** The user's own data. Never destructive: once released, every schema change needs a migration. */
 @Database(
     entities = [WordProgressEntity::class, ClassStatsEntity::class],
     version = 1,

@@ -1,6 +1,8 @@
 package app.enjoylearning504
 
 import android.app.Application
+import androidx.work.Configuration
+import androidx.work.WorkerFactory
 import app.enjoylearning504.core.ads.AdsController
 import app.enjoylearning504.core.ads.adsModule
 import app.enjoylearning504.core.audio.audioModule
@@ -43,7 +45,7 @@ val allModules = listOf(
     difficultModule,
 )
 
-class MemricaApplication : Application() {
+class MemricaApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         startKoin {
@@ -52,4 +54,8 @@ class MemricaApplication : Application() {
         }
         get<AdsController>().initialize(this)
     }
+
+    // WorkManager starts on demand with this configuration (its startup initializer is removed in the manifest)
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder().setWorkerFactory(get<WorkerFactory>()).build()
 }

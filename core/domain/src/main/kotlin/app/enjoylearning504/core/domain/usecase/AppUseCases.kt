@@ -6,6 +6,7 @@ import app.enjoylearning504.core.domain.repository.AuthRepository
 import app.enjoylearning504.core.domain.repository.LegacyDataMigrator
 import app.enjoylearning504.core.domain.repository.LegacyMigrationResult
 import app.enjoylearning504.core.domain.repository.RemoteConfigRepository
+import app.enjoylearning504.core.domain.sync.KeepProgressSyncedUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -22,12 +23,14 @@ class PrepareAppStartUseCase(
     private val appState: AppStateRepository,
     private val remoteConfig: RemoteConfigRepository,
     private val auth: AuthRepository,
+    private val keepProgressSynced: KeepProgressSyncedUseCase,
     private val backgroundScope: CoroutineScope,
 ) {
     suspend operator fun invoke(): Pair<StartDestination, LegacyMigrationResult> {
         val migration = migrator.migrateIfNeeded()
         backgroundScope.launch { runCatching { remoteConfig.refresh() } }
         backgroundScope.launch { auth.ensureGuestSession() }
+        backgroundScope.launch { keepProgressSynced() }
         val destination = if (appState.authPromptShown.first()) StartDestination.Home else StartDestination.AuthPrompt
         return destination to migration
     }

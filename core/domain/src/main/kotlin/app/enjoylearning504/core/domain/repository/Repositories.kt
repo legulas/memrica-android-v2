@@ -70,3 +70,9 @@ sealed interface LegacyMigrationResult {
     /** Migration failed; the old database was left untouched and will be retried next launch. */
     data class Failed(val cause: Throwable) : LegacyMigrationResult
 }
+
+/** Keeps a signed-in account's progress the same on every device it uses. */
+interface ProgressSyncRepository {
+    /** One round: push local changes, pull the server's. Succeeds without doing anything for guests. */
+    suspend fun sync(): Outcome<Unit>
+}

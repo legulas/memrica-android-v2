@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "58016f0079bbe12ea1f27248085817b2",
+    "identityHash": "84d7a2f55b00052251361f2a672b117d",
     "entities": [
       {
         "tableName": "word_progress",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`word_id` INTEGER NOT NULL, `level` INTEGER NOT NULL, `is_difficult` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, PRIMARY KEY(`word_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`word_id` INTEGER NOT NULL, `level` INTEGER NOT NULL, `is_difficult` INTEGER NOT NULL, `level_changed_at` INTEGER NOT NULL, `difficult_changed_at` INTEGER NOT NULL, `pending` INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(`word_id`))",
         "fields": [
           {
             "fieldPath": "wordId",
@@ -27,10 +27,23 @@
             "notNull": true
           },
           {
-            "fieldPath": "updatedAt",
-            "columnName": "updated_at",
+            "fieldPath": "levelChangedAt",
+            "columnName": "level_changed_at",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "difficultChangedAt",
+            "columnName": "difficult_changed_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pending",
+            "columnName": "pending",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
           }
         ],
         "primaryKey": {
@@ -42,7 +55,7 @@
       },
       {
         "tableName": "class_stats",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`class_id` INTEGER NOT NULL, `high_score` INTEGER NOT NULL, PRIMARY KEY(`class_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`class_id` INTEGER NOT NULL, `high_score` INTEGER NOT NULL, `pending` INTEGER NOT NULL DEFAULT 1, PRIMARY KEY(`class_id`))",
         "fields": [
           {
             "fieldPath": "classId",
@@ -55,6 +68,13 @@
             "columnName": "high_score",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "pending",
+            "columnName": "pending",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
           }
         ],
         "primaryKey": {
@@ -67,7 +87,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '58016f0079bbe12ea1f27248085817b2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '84d7a2f55b00052251361f2a672b117d')"
     ]
   }
 }

@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.core.ktx)
     implementation(libs.koin.android)
+    api(libs.androidx.work.runtime)
     testImplementation(libs.turbine)
     testImplementation(libs.ktor.client.core)
 }
@@ -23,4 +24,6 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.room.runtime)
+    androidTestImplementation(libs.ktor.client.mock)
+    androidTestImplementation(libs.kotlinx.serialization.json)
 }

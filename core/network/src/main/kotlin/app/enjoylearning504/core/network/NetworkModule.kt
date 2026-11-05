@@ -12,4 +12,5 @@ val networkModule = module {
     single(MemricaClient) { HttpClientFactory.memricaClient(get()) }
     single { ConfigApi(get(ConfigClient)) }
     single { AuthApi(get(MemricaClient)) }
+    single { ProgressApi(get(MemricaClient)) }
 }

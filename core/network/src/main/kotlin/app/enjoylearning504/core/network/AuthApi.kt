@@ -1,18 +1,9 @@
 package app.enjoylearning504.core.network
 
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.plugins.auth.authProvider
 import io.ktor.client.plugins.auth.providers.BearerAuthProvider
 import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
-import kotlin.coroutines.cancellation.CancellationException
 
 /** The Memrica backend's auth endpoints (internal/routes/routes.go). */
 class AuthApi(private val client: HttpClient) {
@@ -26,7 +17,7 @@ class AuthApi(private val client: HttpClient) {
         post("auth/verify-email", VerifyEmailRequest(email, code, password))
 
     suspend fun login(email: String, password: String): NetworkResult<AuthResponse> =
-        post("auth/login", LoginRequest(email, password))
+        post("auth/login", LoginRequest(email, password, authType = "email"))
 
     suspend fun sendOtp(phone: String): NetworkResult<Unit> = post("auth/send-otp", SendOtpRequest(phone))
 
@@ -41,31 +32,13 @@ class AuthApi(private val client: HttpClient) {
 
     suspend fun logout(refreshToken: String): NetworkResult<Unit> = post("auth/logout", RefreshRequest(refreshToken))
 
-    suspend fun me(): NetworkResult<String> = call { client.get("me") }
+    suspend fun me(): NetworkResult<String> = networkCall { client.get("me") }
 
     /** Forgets the bearer tokens the client cached, after sign-in, sign-out or a new guest session. */
     fun clearCachedTokens() {
         client.authProvider<BearerAuthProvider>()?.clearToken()
     }
 
-    private suspend inline fun <reified T> post(path: String, body: Any): NetworkResult<T> = call {
-        client.post(path) {
-            contentType(ContentType.Application.Json)
-            setBody(body)
-        }
-    }
+    private suspend inline fun <reified T> post(path: String, body: Any): NetworkResult<T> = client.postJson(path, body)
 
-    private suspend inline fun <reified T> call(block: () -> HttpResponse): NetworkResult<T> = try {
-        val response = block()
-        if (response.status.isSuccess()) {
-            @Suppress("UNCHECKED_CAST")
-            NetworkResult.Success(if (T::class == Unit::class) Unit as T else response.body<T>())
-        } else {
-            NetworkResult.HttpError(response.status.value, response.bodyAsText().trim())
-        }
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: Exception) {
-        NetworkResult.ConnectionError(e)
-    }
 }

@@ -15,24 +15,28 @@ abstract class UserDao {
     @Query("SELECT * FROM class_stats")
     abstract fun observeClassStats(): Flow<List<ClassStatsEntity>>
 
-    // SQLite UPSERT needs API 30, so rows are created first and then updated
+    // SQLite UPSERT needs API 30, so rows are created first and then updated.
+    // A created row is not pending on its own: only the update that follows marks what changed.
 
-    @Query("INSERT OR IGNORE INTO word_progress (word_id, level, is_difficult, updated_at) VALUES (:wordId, 0, 0, :now)")
-    protected abstract suspend fun ensureWord(wordId: Int, now: Long)
+    @Query(
+        "INSERT OR IGNORE INTO word_progress (word_id, level, is_difficult, level_changed_at, difficult_changed_at, pending) " +
+            "VALUES (:wordId, 0, 0, 0, 0, 0)",
+    )
+    protected abstract suspend fun ensureWord(wordId: Int)
 
-    @Query("UPDATE word_progress SET level = :level, updated_at = :now WHERE word_id = :wordId")
+    @Query("UPDATE word_progress SET level = :level, level_changed_at = :now, pending = 1 WHERE word_id = :wordId")
     protected abstract suspend fun updateLevel(wordId: Int, level: Int, now: Long)
 
-    @Query("UPDATE word_progress SET is_difficult = :isDifficult, updated_at = :now WHERE word_id = :wordId")
+    @Query("UPDATE word_progress SET is_difficult = :isDifficult, difficult_changed_at = :now, pending = 1 WHERE word_id = :wordId")
     protected abstract suspend fun updateDifficult(wordId: Int, isDifficult: Boolean, now: Long)
 
-    @Query("INSERT OR IGNORE INTO class_stats (class_id, high_score) VALUES (:classId, 0)")
+    @Query("INSERT OR IGNORE INTO class_stats (class_id, high_score, pending) VALUES (:classId, 0, 0)")
     protected abstract suspend fun ensureClass(classId: Int)
 
     @Query("SELECT high_score FROM class_stats WHERE class_id = :classId")
     protected abstract suspend fun highScore(classId: Int): Int
 
-    @Query("UPDATE class_stats SET high_score = :score WHERE class_id = :classId")
+    @Query("UPDATE class_stats SET high_score = :score, pending = 1 WHERE class_id = :classId")
     protected abstract suspend fun updateHighScore(classId: Int, score: Int)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -43,13 +47,13 @@ abstract class UserDao {
 
     @Transaction
     open suspend fun setLevel(wordId: Int, level: Int, now: Long) {
-        ensureWord(wordId, now)
+        ensureWord(wordId)
         updateLevel(wordId, level, now)
     }
 
     @Transaction
     open suspend fun setDifficult(wordId: Int, isDifficult: Boolean, now: Long) {
-        ensureWord(wordId, now)
+        ensureWord(wordId)
         updateDifficult(wordId, isDifficult, now)
     }
 
@@ -66,5 +70,72 @@ abstract class UserDao {
     open suspend fun importLegacy(words: List<WordProgressEntity>, classes: List<ClassStatsEntity>) {
         replaceWordProgress(words)
         replaceClassStats(classes)
+    }
+
+    // Sync
+
+    @Query("SELECT * FROM word_progress WHERE pending = 1")
+    abstract suspend fun pendingWords(): List<WordProgressEntity>
+
+    @Query("SELECT * FROM class_stats WHERE pending = 1")
+    abstract suspend fun pendingClasses(): List<ClassStatsEntity>
+
+    @Query("UPDATE word_progress SET pending = 1")
+    protected abstract suspend fun markAllWordsPending()
+
+    @Query("UPDATE class_stats SET pending = 1")
+    protected abstract suspend fun markAllClassesPending()
+
+    /** Every row goes to the server again, e.g. when a different account signs in on this phone. */
+    @Transaction
+    open suspend fun markAllPending() {
+        markAllWordsPending()
+        markAllClassesPending()
+    }
+
+    // A row edited while its sync was in flight no longer matches what was sent, so it stays pending
+
+    @Query(
+        "UPDATE word_progress SET pending = 0 WHERE word_id = :wordId " +
+            "AND level_changed_at = :levelChangedAt AND difficult_changed_at = :difficultChangedAt",
+    )
+    protected abstract suspend fun clearWordPending(wordId: Int, levelChangedAt: Long, difficultChangedAt: Long)
+
+    @Query("UPDATE class_stats SET pending = 0 WHERE class_id = :classId AND high_score = :highScore")
+    protected abstract suspend fun clearClassPending(classId: Int, highScore: Int)
+
+    // Server rows win only where they changed later than this phone's copy; high scores only grow
+
+    @Query("UPDATE word_progress SET level = :level, level_changed_at = :changedAt WHERE word_id = :wordId AND level_changed_at < :changedAt")
+    protected abstract suspend fun applyLevel(wordId: Int, level: Int, changedAt: Long)
+
+    @Query(
+        "UPDATE word_progress SET is_difficult = :isDifficult, difficult_changed_at = :changedAt " +
+            "WHERE word_id = :wordId AND difficult_changed_at < :changedAt",
+    )
+    protected abstract suspend fun applyDifficult(wordId: Int, isDifficult: Boolean, changedAt: Long)
+
+    @Query("UPDATE class_stats SET high_score = :score WHERE class_id = :classId AND high_score < :score")
+    protected abstract suspend fun applyHighScore(classId: Int, score: Int)
+
+    /** Settles one sync round: what the server confirmed is no longer pending, and its newer rows are merged in. */
+    @Transaction
+    open suspend fun completeSync(
+        sentWords: List<WordProgressEntity>,
+        sentClasses: List<ClassStatsEntity>,
+        serverWords: List<WordProgressEntity>,
+        serverClasses: List<ClassStatsEntity>,
+    ) {
+        sentWords.forEach { clearWordPending(it.wordId, it.levelChangedAt, it.difficultChangedAt) }
+        sentClasses.forEach { clearClassPending(it.classId, it.highScore) }
+        serverWords.forEach {
+            ensureWord(it.wordId)
+            applyLevel(it.wordId, it.level, it.levelChangedAt)
+            applyDifficult(it.wordId, it.isDifficult, it.difficultChangedAt)
+        }
+        serverClasses.forEach {
+            ensureClass(it.classId)
+            applyHighScore(it.classId, it.highScore)
+        }
     }
 }

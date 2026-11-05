@@ -5,8 +5,14 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+
+/** Where progress sync left off: the account it ran for and the server version it reached. */
+data class SyncState(val userId: String, val version: Long)
 
 /** App-level flags and cached values. */
 class AppPreferences(private val store: DataStore<Preferences>) {
@@ -21,10 +27,21 @@ class AppPreferences(private val store: DataStore<Preferences>) {
     suspend fun setLegacyMigrationDone() = store.edit { it[LEGACY_MIGRATION_DONE] = true }
     suspend fun setAdTurn(turn: Int) = store.edit { it[AD_TURN] = turn }
 
+    suspend fun syncState(): SyncState? = store.data.map { prefs ->
+        prefs[SYNCED_USER_ID]?.let { SyncState(it, prefs[SYNC_VERSION] ?: 0) }
+    }.first()
+
+    suspend fun setSyncState(state: SyncState) = store.edit {
+        it[SYNCED_USER_ID] = state.userId
+        it[SYNC_VERSION] = state.version
+    }
+
     private companion object {
         val AUTH_PROMPT_SHOWN = booleanPreferencesKey("auth_prompt_shown")
         val PRIVACY_NOTICE_SHOWN = booleanPreferencesKey("privacy_notice_shown")
         val LEGACY_MIGRATION_DONE = booleanPreferencesKey("legacy_migration_done")
         val AD_TURN = intPreferencesKey("ad_turn")
+        val SYNCED_USER_ID = stringPreferencesKey("synced_user_id")
+        val SYNC_VERSION = longPreferencesKey("sync_version")
     }
 }

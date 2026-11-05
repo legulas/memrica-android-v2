@@ -56,7 +56,13 @@ class LegacyDatabaseMigratorTest {
         assertEquals(2, rows.getValue(2).level)
         assertTrue(rows.getValue(3).isDifficult)
         assertEquals(0, rows.getValue(3).level)
+        // Everything imported waits to be uploaded; values the old app never set count as never changed
+        assertTrue(rows.values.all { it.pending })
+        assertEquals(0, rows.getValue(2).difficultChangedAt)
+        assertEquals(0, rows.getValue(3).levelChangedAt)
+        assertTrue(rows.getValue(3).difficultChangedAt > 0)
         assertEquals(4, db.userDao().observeClassStats().first().single { it.classId == 1 }.highScore)
+        assertTrue(db.userDao().pendingClasses().isNotEmpty())
         assertFalse(legacy.exists())
         assertTrue(File(legacy.path + LegacyDatabaseMigrator.BACKUP_SUFFIX).exists())
     }

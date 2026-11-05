@@ -12,7 +12,7 @@ data class RegisterRequest(val email: String = "", @SerialName("auth_type") val 
 data class VerifyEmailRequest(val email: String, val code: String, val password: String)
 
 @Serializable
-data class LoginRequest(val email: String, val password: String, @SerialName("auth_type") val authType: String = "email")
+data class LoginRequest(val email: String, val password: String, @SerialName("auth_type") val authType: String)
 
 @Serializable
 data class SendOtpRequest(val phone: String)
@@ -45,4 +45,34 @@ data class RemoteConfigDto(
     val test: Int? = null,
     /** Ad turn: how many screens between interstitials. */
     val ttest: Int? = null,
+)
+
+/** POST progress/sync. Timestamps are milliseconds on the phone's clock; 0 means never changed. */
+@Serializable
+data class SyncRequest(
+    val since: Long,
+    val words: List<WordProgressDto>,
+    val classes: List<ClassStatsDto>,
+)
+
+@Serializable
+data class SyncResponse(
+    val version: Long,
+    val words: List<WordProgressDto> = emptyList(),
+    val classes: List<ClassStatsDto> = emptyList(),
+)
+
+@Serializable
+data class WordProgressDto(
+    @SerialName("word_id") val wordId: Int,
+    val level: Int,
+    @SerialName("level_changed_at") val levelChangedAt: Long,
+    val difficult: Boolean,
+    @SerialName("difficult_changed_at") val difficultChangedAt: Long,
+)
+
+@Serializable
+data class ClassStatsDto(
+    @SerialName("class_id") val classId: Int,
+    @SerialName("high_score") val highScore: Int,
 )

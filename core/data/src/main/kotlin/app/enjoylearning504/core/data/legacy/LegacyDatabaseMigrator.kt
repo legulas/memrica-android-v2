@@ -59,12 +59,16 @@ class LegacyDatabaseMigrator(
             ).use { c ->
                 buildList {
                     while (c.moveToNext()) {
+                        val level = c.getInt(1).coerceIn(0, MAX_LEVEL)
+                        val isDifficult = c.getInt(2) != 0
+                        // A value the old app never set counts as never changed, so it can't override synced progress
                         add(
                             WordProgressEntity(
                                 wordId = c.getInt(0),
-                                level = c.getInt(1).coerceIn(0, MAX_LEVEL),
-                                isDifficult = c.getInt(2) != 0,
-                                updatedAt = now,
+                                level = level,
+                                isDifficult = isDifficult,
+                                levelChangedAt = if (level > 0) now else 0,
+                                difficultChangedAt = if (isDifficult) now else 0,
                             ),
                         )
                     }
