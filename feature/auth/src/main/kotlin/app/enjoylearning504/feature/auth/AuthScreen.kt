@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.enjoylearning504.core.designsystem.component.OtpField
 import app.enjoylearning504.core.designsystem.component.PrimaryButton
 import app.enjoylearning504.core.designsystem.theme.MemricaColors
 import app.enjoylearning504.core.model.AppError
@@ -51,8 +53,10 @@ fun AuthRoute(onDone: () -> Unit, viewModel: AuthViewModel = koinViewModel()) {
         onCode = viewModel::onCode,
         onSubmit = viewModel::submit,
         onEditPhone = viewModel::editPhone,
+        onResend = viewModel::resend,
         onSkip = viewModel::skip,
     )
+    if (state.step == AuthStep.EnterCode) SmsCodeListener(key = state.codeRequest, onCode = viewModel::onCode)
 }
 
 @Composable
@@ -62,6 +66,7 @@ internal fun AuthScreen(
     onCode: (String) -> Unit,
     onSubmit: () -> Unit,
     onEditPhone: () -> Unit,
+    onResend: () -> Unit,
     onSkip: () -> Unit,
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
@@ -85,7 +90,7 @@ internal fun AuthScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(24.dp))
-                Form(state, onPhone, onCode, onSubmit, onEditPhone)
+                Form(state, onPhone, onCode, onSubmit, onEditPhone, onResend)
                 state.error?.let {
                     Text(
                         stringResource(it.message()),
@@ -115,6 +120,7 @@ private fun Form(
     onCode: (String) -> Unit,
     onSubmit: () -> Unit,
     onEditPhone: () -> Unit,
+    onResend: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         when (state.step) {
@@ -128,19 +134,43 @@ private fun Form(
                     )
                     TextButton(onClick = onEditPhone) { Text(stringResource(R.string.auth_change)) }
                 }
-                OutlinedTextField(
+                val codeDescription = stringResource(R.string.auth_code)
+                OtpField(
                     value = state.code,
                     onValueChange = onCode,
-                    label = { Text(stringResource(R.string.auth_code)) },
-                    isError = state.fieldError == FieldError.Code,
-                    supportingText = errorText(state.fieldError == FieldError.Code, R.string.auth_error_code_format),
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(textDirection = TextDirection.Ltr),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-                    modifier = Modifier.fillMaxWidth(),
+                    isError = state.fieldError == FieldError.Code || state.error == AppError.InvalidCode,
+                    enabled = !state.isBusy,
+                    autoFocus = true,
+                    onDone = onSubmit,
+                    modifier = Modifier.semantics { contentDescription = codeDescription },
                 )
+                if (state.fieldError == FieldError.Code) {
+                    Text(
+                        stringResource(R.string.auth_error_code_format),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                ResendRow(state, onResend)
             }
+        }
+    }
+}
+
+/** Time left on the sent code, and resending once it has expired. */
+@Composable
+private fun ResendRow(state: AuthUiState, onResend: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        TextButton(onClick = onResend, enabled = state.resendSeconds == 0 && !state.isBusy) {
+            Text(stringResource(R.string.auth_resend))
+        }
+        Spacer(Modifier.weight(1f))
+        if (state.resendSeconds > 0) {
+            Text(
+                stringResource(R.string.auth_timer, state.resendSeconds / 60, state.resendSeconds % 60),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

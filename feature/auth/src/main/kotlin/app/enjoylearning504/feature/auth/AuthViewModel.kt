@@ -6,6 +6,10 @@ import app.enjoylearning504.core.domain.repository.AuthRepository
 import app.enjoylearning504.core.domain.usecase.CompleteAuthPromptUseCase
 import app.enjoylearning504.core.model.AppError
 import app.enjoylearning504.core.model.Outcome
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeSource
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +30,10 @@ data class AuthUiState(
     val step: AuthStep = AuthStep.EnterPhone,
     val phone: String = "",
     val code: String = "",
+    /** Seconds until the sent code expires; resending is possible at 0. */
+    val resendSeconds: Int = 0,
+    /** Goes up with every code sent, so the SMS listener restarts for the new SMS. */
+    val codeRequest: Int = 0,
     val isBusy: Boolean = false,
     val fieldError: FieldError? = null,
     val error: AppError? = null,
@@ -38,17 +46,38 @@ class AuthViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
+    private var countdown: Job? = null
 
     fun onPhone(value: String) = _uiState.update {
         it.copy(phone = value.toLatinDigits().filter { c -> c.isDigit() || c == '+' }, fieldError = null, error = null)
     }
 
-    fun onCode(value: String) = _uiState.update {
-        it.copy(code = value.toLatinDigits().filter(Char::isDigit).take(CODE_LENGTH), fieldError = null, error = null)
+    /** Typed or read from the SMS. A complete code is verified right away. */
+    fun onCode(value: String) {
+        val code = value.toLatinDigits().filter(Char::isDigit).take(CODE_LENGTH)
+        val changed = code != _uiState.value.code
+        _uiState.update { it.copy(code = code, fieldError = null, error = null) }
+        if (changed && code.length == CODE_LENGTH) submit()
     }
 
     /** Back from the code step to change the number. */
-    fun editPhone() = _uiState.update { it.copy(step = AuthStep.EnterPhone, code = "", error = null) }
+    fun editPhone() {
+        countdown?.cancel()
+        _uiState.update { it.copy(step = AuthStep.EnterPhone, code = "", resendSeconds = 0, error = null) }
+    }
+
+    fun resend() {
+        val s = _uiState.value
+        if (s.isBusy || s.resendSeconds > 0) return
+        val phone = normalizeIranMobile(s.phone) ?: return
+        _uiState.update { it.copy(isBusy = true, code = "", fieldError = null, error = null) }
+        viewModelScope.launch {
+            when (val result = auth.sendOtp(phone)) {
+                is Outcome.Failure -> _uiState.update { it.copy(isBusy = false, error = result.error) }
+                is Outcome.Success -> codeSent()
+            }
+        }
+    }
 
     fun submit() {
         val s = _uiState.value
@@ -71,10 +100,26 @@ class AuthViewModel(
             when (result) {
                 is Outcome.Failure -> _uiState.update { it.copy(isBusy = false, error = result.error) }
                 is Outcome.Success -> when (s.step) {
-                    AuthStep.EnterPhone -> _uiState.update { it.copy(isBusy = false, step = AuthStep.EnterCode, code = "") }
+                    AuthStep.EnterPhone -> codeSent()
                     AuthStep.EnterCode -> finish()
                 }
             }
+        }
+    }
+
+    private fun codeSent() {
+        _uiState.update {
+            it.copy(isBusy = false, step = AuthStep.EnterCode, code = "", codeRequest = it.codeRequest + 1)
+        }
+        countdown?.cancel()
+        val expiry = TimeSource.Monotonic.markNow() + CODE_LIFETIME
+        countdown = viewModelScope.launch {
+            do {
+                val left = -expiry.elapsedNow()
+                val seconds = ((left.inWholeMilliseconds + 999) / 1000).coerceAtLeast(0).toInt()
+                _uiState.update { it.copy(resendSeconds = seconds) }
+                delay((left.inWholeMilliseconds % 1000).let { if (it > 0) it else 1000 })
+            } while (seconds > 0)
         }
     }
 
@@ -89,6 +134,9 @@ class AuthViewModel(
 
     private companion object {
         const val CODE_LENGTH = 6
+
+        // How long the backend keeps a phone code (phoneOTPService in cmd/api/main.go)
+        val CODE_LIFETIME = 2.minutes
     }
 }
 

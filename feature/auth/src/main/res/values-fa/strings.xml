@@ -9,6 +9,7 @@
     <string name="auth_code_sent_phone">کد به %1$s ارسال شد</string>
     <string name="auth_verify">تایید</string>
     <string name="auth_change">تغییر</string>
+    <string name="auth_resend">ارسال مجدد کد</string>
     <string name="auth_skip">رد کردن</string>
     <string name="auth_error_connection">اتصال برقرار نشد. اینترنت را بررسی کنید و دوباره تلاش کنید.</string>
     <string name="auth_error_code">کد اشتباه است یا منقضی شده</string>

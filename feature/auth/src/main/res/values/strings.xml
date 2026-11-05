@@ -9,6 +9,8 @@
     <string name="auth_code_sent_phone">We sent a code to %1$s</string>
     <string name="auth_verify">Verify</string>
     <string name="auth_change">Change</string>
+    <string name="auth_resend">Resend code</string>
+    <string name="auth_timer" translatable="false">%1$02d:%2$02d</string>
     <string name="auth_skip">Skip</string>
     <string name="auth_error_connection">Couldn\'t connect. Check your internet and try again.</string>
     <string name="auth_error_code">The code is wrong or has expired</string>
