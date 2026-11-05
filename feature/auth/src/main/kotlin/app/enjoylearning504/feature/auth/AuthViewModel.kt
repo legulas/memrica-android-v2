@@ -12,32 +12,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class AuthTab { SignUp, SignIn }
-enum class AuthMethod { Email, Phone }
-
-/** Where the user is in the current flow. */
+/** Where the user is in the phone sign-in flow. Signing in and signing up are the same flow. */
 enum class AuthStep {
-    /** Email sign-up, phone sign-up/in, forgot password: asking for the address or number. */
-    EnterIdentifier,
-    /** A code was sent; asking for it (plus a password for email sign-up and reset). */
+    /** Asking for the mobile number. */
+    EnterPhone,
+    /** A code was sent; asking for it. */
     EnterCode,
-    /** Email sign-in: email and password together. */
-    EnterCredentials,
-    /** Forgot password: email entry, then [EnterCode]. */
-    ForgotPassword,
 }
 
-enum class FieldError { Email, Phone, Password, Code }
+enum class FieldError { Phone, Code }
 
 data class AuthUiState(
-    val tab: AuthTab = AuthTab.SignUp,
-    val method: AuthMethod = AuthMethod.Email,
-    val step: AuthStep = AuthStep.EnterIdentifier,
-    val resettingPassword: Boolean = false,
-    val email: String = "",
+    val step: AuthStep = AuthStep.EnterPhone,
     val phone: String = "",
     val code: String = "",
-    val password: String = "",
     val isBusy: Boolean = false,
     val fieldError: FieldError? = null,
     val error: AppError? = null,
@@ -51,55 +39,40 @@ class AuthViewModel(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    fun selectTab(tab: AuthTab) = _uiState.update {
-        it.copy(tab = tab, step = initialStep(tab, it.method), resettingPassword = false, code = "", password = "", fieldError = null, error = null)
+    fun onPhone(value: String) = _uiState.update {
+        it.copy(phone = value.toLatinDigits().filter { c -> c.isDigit() || c == '+' }, fieldError = null, error = null)
     }
 
-    fun selectMethod(method: AuthMethod) = _uiState.update {
-        it.copy(method = method, step = initialStep(it.tab, method), resettingPassword = false, code = "", password = "", fieldError = null, error = null)
+    fun onCode(value: String) = _uiState.update {
+        it.copy(code = value.toLatinDigits().filter(Char::isDigit).take(CODE_LENGTH), fieldError = null, error = null)
     }
 
-    fun onEmail(value: String) = _uiState.update { it.copy(email = value, fieldError = null, error = null) }
-    fun onPhone(value: String) = _uiState.update { it.copy(phone = value.filter { c -> c.isDigit() || c == '+' }, fieldError = null, error = null) }
-    fun onCode(value: String) = _uiState.update { it.copy(code = value.filter(Char::isDigit).take(CODE_LENGTH), fieldError = null, error = null) }
-    fun onPassword(value: String) = _uiState.update { it.copy(password = value, fieldError = null, error = null) }
-
-    fun startForgotPassword() = _uiState.update {
-        it.copy(step = AuthStep.ForgotPassword, resettingPassword = true, code = "", password = "", fieldError = null, error = null)
-    }
-
-    /** Back from the code step to change the email or number. */
-    fun editIdentifier() = _uiState.update {
-        it.copy(step = if (it.resettingPassword) AuthStep.ForgotPassword else AuthStep.EnterIdentifier, code = "", error = null)
-    }
+    /** Back from the code step to change the number. */
+    fun editPhone() = _uiState.update { it.copy(step = AuthStep.EnterPhone, code = "", error = null) }
 
     fun submit() {
         val s = _uiState.value
         if (s.isBusy) return
-        validate(s)?.let { error -> _uiState.update { it.copy(fieldError = error) }; return }
+        val phone = normalizeIranMobile(s.phone)
+        if (phone == null) {
+            _uiState.update { it.copy(fieldError = FieldError.Phone) }
+            return
+        }
+        if (s.step == AuthStep.EnterCode && s.code.length != CODE_LENGTH) {
+            _uiState.update { it.copy(fieldError = FieldError.Code) }
+            return
+        }
         _uiState.update { it.copy(isBusy = true, error = null) }
         viewModelScope.launch {
-            val email = s.email.trim()
-            val phone = s.phone.trim()
             val result: Outcome<*> = when (s.step) {
-                AuthStep.EnterIdentifier -> when (s.method) {
-                    AuthMethod.Email -> auth.registerWithEmail(email)
-                    AuthMethod.Phone -> auth.sendOtp(phone)
-                }
-                AuthStep.ForgotPassword -> auth.forgotPassword(email)
-                AuthStep.EnterCredentials -> auth.loginWithEmail(email, s.password)
-                AuthStep.EnterCode -> when {
-                    s.method == AuthMethod.Phone -> auth.verifyOtp(phone, s.code)
-                    s.resettingPassword -> auth.resetPassword(email, s.code, s.password)
-                    else -> auth.verifyEmail(email, s.code, s.password)
-                }
+                AuthStep.EnterPhone -> auth.sendOtp(phone)
+                AuthStep.EnterCode -> auth.verifyOtp(phone, s.code)
             }
             when (result) {
                 is Outcome.Failure -> _uiState.update { it.copy(isBusy = false, error = result.error) }
-                is Outcome.Success -> if (s.step == AuthStep.EnterIdentifier || s.step == AuthStep.ForgotPassword) {
-                    _uiState.update { it.copy(isBusy = false, step = AuthStep.EnterCode, code = "", password = "") }
-                } else {
-                    finish()
+                is Outcome.Success -> when (s.step) {
+                    AuthStep.EnterPhone -> _uiState.update { it.copy(isBusy = false, step = AuthStep.EnterCode, code = "") }
+                    AuthStep.EnterCode -> finish()
                 }
             }
         }
@@ -114,30 +87,32 @@ class AuthViewModel(
         _uiState.update { it.copy(isBusy = false, finished = true) }
     }
 
-    private fun validate(s: AuthUiState): FieldError? {
-        val needsEmail = s.method == AuthMethod.Email && s.step != AuthStep.EnterCode
-        val needsPhone = s.method == AuthMethod.Phone && s.step == AuthStep.EnterIdentifier
-        val needsCode = s.step == AuthStep.EnterCode
-        val needsPassword = s.step == AuthStep.EnterCredentials ||
-            (s.step == AuthStep.EnterCode && s.method == AuthMethod.Email)
-        return when {
-            needsEmail && !EMAIL.matches(s.email.trim()) -> FieldError.Email
-            needsPhone && !PHONE.matches(s.phone.trim()) -> FieldError.Phone
-            needsCode && s.code.length != CODE_LENGTH -> FieldError.Code
-            needsPassword && s.password.toByteArray().size !in PASSWORD_RANGE -> FieldError.Password
-            else -> null
-        }
-    }
-
-    private fun initialStep(tab: AuthTab, method: AuthMethod) =
-        if (tab == AuthTab.SignIn && method == AuthMethod.Email) AuthStep.EnterCredentials else AuthStep.EnterIdentifier
-
     private companion object {
         const val CODE_LENGTH = 6
-        val PASSWORD_RANGE = 8..72
-
-        // Same rules as the backend's internal/validator/validator.go
-        val EMAIL = Regex("^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$")
-        val PHONE = Regex("^\\+[1-9]\\d{6,14}$")
     }
 }
+
+private val IRAN_MOBILE = Regex("^9\\d{9}$")
+
+/**
+ * Turns 09121112223, 9121112223 or +989121112223 into the E.164 form the backend
+ * expects (+989121112223). Returns null for anything else.
+ */
+internal fun normalizeIranMobile(input: String): String? {
+    val number = input.trim()
+    val national = when {
+        number.startsWith("+98") -> number.removePrefix("+98")
+        number.startsWith("0") -> number.removePrefix("0")
+        else -> number
+    }
+    return if (IRAN_MOBILE.matches(national)) "+98$national" else null
+}
+
+/** Persian and Arabic-Indic keyboards type their own digits; the backend wants 0-9. */
+private fun String.toLatinDigits(): String = map { c ->
+    when (c) {
+        in '۰'..'۹' -> '0' + (c - '۰')
+        in '٠'..'٩' -> '0' + (c - '٠')
+        else -> c
+    }
+}.joinToString("")
