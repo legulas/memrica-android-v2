@@ -1,6 +1,20 @@
 package app.enjoylearning504.feature.quiz
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -46,6 +61,9 @@ import app.enjoylearning504.core.designsystem.R as DesignR
 import app.enjoylearning504.core.designsystem.component.PrimaryButton
 import app.enjoylearning504.core.designsystem.component.ProgressBar
 import app.enjoylearning504.core.designsystem.component.SurfaceCard
+import app.enjoylearning504.core.designsystem.component.feedbackMotion
+import app.enjoylearning504.core.designsystem.component.stepTransition
+import app.enjoylearning504.core.designsystem.component.rememberFeedbackMotion
 import app.enjoylearning504.core.designsystem.theme.MemricaColors
 import app.enjoylearning504.core.domain.quiz.QuizMode
 import app.enjoylearning504.core.domain.usecase.QuizResult
@@ -67,6 +85,7 @@ fun QuizRoute(onExit: () -> Unit, viewModel: QuizViewModel = koinViewModel()) {
         state = state,
         wrongWords = wrongWords,
         onAnswer = viewModel::onAnswer,
+        onChosen = viewModel::onChosen,
         onDifficultChange = viewModel::onDifficultChange,
         onBack = { exit(onExit) },
     )
@@ -90,6 +109,7 @@ internal fun QuizScreen(
     state: QuizUiState,
     wrongWords: List<WordWithProgress>,
     onAnswer: (Int) -> Unit,
+    onChosen: (Boolean) -> Unit,
     onDifficultChange: (Int, Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -108,15 +128,23 @@ internal fun QuizScreen(
                     is QuizUiState.Playing -> {
                         val quiz = state.quiz
                         Scoreboard(quiz.rightCount, quiz.wrongCount, quiz.progressPercent.toFloat())
-                        val question = quiz.current ?: return@Column
-                        AnswerGrid(
-                            questionKey = quiz.index,
-                            word = question.word,
-                            options = question.options,
-                            askInEnglish = true,
-                            level = null,
-                            onAnswered = onAnswer,
-                        )
+                        AnimatedContent(
+                            targetState = quiz,
+                            contentKey = { it.index },
+                            transitionSpec = { stepTransition() },
+                            label = "question",
+                        ) { shown ->
+                            val question = shown.current ?: return@AnimatedContent
+                            AnswerGrid(
+                                questionKey = shown.index,
+                                word = question.word,
+                                options = question.options,
+                                askInEnglish = true,
+                                level = null,
+                                onAnswered = onAnswer,
+                                onChosen = onChosen,
+                            )
+                        }
                     }
                     is QuizUiState.Finished -> {
                         Scoreboard(state.result.rightCount, state.result.wrongCount, 100f)
@@ -138,13 +166,26 @@ private fun Scoreboard(right: Int, wrong: Int, percent: Float) {
     }
 }
 
+/** A count in a colored circle; it bumps and the new number rolls in whenever it goes up. */
 @Composable
 private fun Counter(value: Int, color: Color, description: String) {
+    val motion = rememberFeedbackMotion()
+    val initial = remember { value }
+    LaunchedEffect(value) { if (value > initial) motion.pulse(peak = 1.2f) }
     Box(
-        Modifier.size(44.dp).background(color, CircleShape).semantics { contentDescription = description },
+        Modifier.size(44.dp).feedbackMotion(motion).background(color, CircleShape).semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        Text(localizedNumber(value), color = Color.White, style = MaterialTheme.typography.titleMedium)
+        AnimatedContent(
+            targetState = value,
+            transitionSpec = {
+                (slideInVertically(tween(200)) { it } + fadeIn(tween(200)))
+                    .togetherWith(slideOutVertically(tween(200)) { -it } + fadeOut(tween(120)))
+            },
+            label = "counter",
+        ) { shown ->
+            Text(localizedNumber(shown), color = Color.White, style = MaterialTheme.typography.titleMedium)
+        }
     }
 }
 
@@ -158,25 +199,10 @@ private fun ResultContent(
 ) {
     LazyColumn(Modifier.fillMaxSize()) {
         item {
-            SurfaceCard(Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    val total = if (mode is QuizMode.Class) {
-                        "${localizedNumber(result.questionCount)}/${localizedNumber(result.classWordCount)}"
-                    } else {
-                        localizedNumber(result.questionCount)
-                    }
-                    ResultRow(stringResource(R.string.quiz_words_in_test), total, MaterialTheme.colorScheme.onSurface)
-                    ResultRow(stringResource(R.string.quiz_right), localizedNumber(result.rightCount), MemricaColors.Green)
-                    ResultRow(stringResource(R.string.quiz_wrong), localizedNumber(result.wrongCount), MemricaColors.Red)
-                    result.highScore?.let { best ->
-                        Text(
-                            if (result.isNewHighScore) stringResource(R.string.quiz_new_record)
-                            else stringResource(R.string.quiz_record, localizedNumber(best)),
-                            color = if (result.isNewHighScore) MemricaColors.Green else MemricaColors.Muted,
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                }
+            // The summary grows in once, when the quiz ends
+            val appear = remember { MutableTransitionState(false).apply { targetState = true } }
+            AnimatedVisibility(appear, enter = fadeIn(tween(300)) + scaleIn(tween(300), initialScale = 0.9f)) {
+                Summary(mode, result)
             }
         }
         item { NativeAdBanner(mode.resultAd(), Modifier.fillMaxWidth().padding(vertical = 12.dp)) }
@@ -211,9 +237,56 @@ private fun ResultContent(
             }
         }
         items(wrongWords, key = { it.word.id }) { item ->
-            WrongWordRow(item, onDifficultChange)
+            WrongWordRow(item, onDifficultChange, Modifier.animateItem())
         }
     }
+}
+
+@Composable
+private fun Summary(mode: QuizMode, result: QuizResult) {
+    SurfaceCard(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            val total = if (mode is QuizMode.Class) {
+                "${localizedNumber(result.questionCount)}/${localizedNumber(result.classWordCount)}"
+            } else {
+                localizedNumber(result.questionCount)
+            }
+            ResultRow(stringResource(R.string.quiz_words_in_test), total, MaterialTheme.colorScheme.onSurface)
+            ResultRow(stringResource(R.string.quiz_right), localizedNumber(result.rightCount), MemricaColors.Green)
+            ResultRow(stringResource(R.string.quiz_wrong), localizedNumber(result.wrongCount), MemricaColors.Red)
+            result.highScore?.let { best ->
+                if (result.isNewHighScore) {
+                    NewRecord()
+                } else {
+                    Text(
+                        stringResource(R.string.quiz_record, localizedNumber(best)),
+                        color = MemricaColors.Muted,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** The new-record line gently breathes while the result is on screen. */
+@Composable
+private fun NewRecord() {
+    val scale by rememberInfiniteTransition(label = "record").animateFloat(
+        initialValue = 1f,
+        targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse),
+        label = "recordScale",
+    )
+    Text(
+        stringResource(R.string.quiz_new_record),
+        color = MemricaColors.Green,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        },
+    )
 }
 
 @Composable
@@ -225,8 +298,8 @@ private fun ResultRow(label: String, value: String, color: Color) {
 }
 
 @Composable
-private fun WrongWordRow(item: WordWithProgress, onDifficultChange: (Int, Boolean) -> Unit) {
-    SurfaceCard(Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
+private fun WrongWordRow(item: WordWithProgress, onDifficultChange: (Int, Boolean) -> Unit, modifier: Modifier = Modifier) {
+    SurfaceCard(modifier.fillMaxWidth().padding(bottom = 6.dp)) {
         Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(item.word.english, style = MaterialTheme.typography.titleMedium.copy(textDirection = TextDirection.Ltr))

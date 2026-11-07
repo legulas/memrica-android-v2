@@ -1,6 +1,10 @@
 package app.enjoylearning504.core.designsystem.component
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,7 +20,9 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,7 +59,7 @@ fun PrimaryButton(
     }
 }
 
-/** A thin rounded progress bar; [percent] is 0..100. */
+/** A thin rounded progress bar; [percent] is 0..100 and changes glide to the new value. */
 @Composable
 fun ProgressBar(
     percent: Float,
@@ -61,8 +67,9 @@ fun ProgressBar(
     color: Color = MemricaColors.Yellow,
     trackColor: Color = MemricaColors.TealDeep,
 ) {
+    val animated by animateFloatAsState(percent, tween(PROGRESS_MS), label = "progress")
     LinearProgressIndicator(
-        progress = { (percent / 100f).coerceIn(0f, 1f) },
+        progress = { (animated / 100f).coerceIn(0f, 1f) },
         modifier = modifier.fillMaxWidth().height(8.dp).clip(MaterialTheme.shapes.small),
         color = color,
         trackColor = trackColor,
@@ -82,9 +89,10 @@ fun ProgressRing(
     trackColor: Color = Color.White.copy(alpha = 0.6f),
     labelColor: Color = Color.White,
 ) {
+    val animated by animateFloatAsState(percent, tween(PROGRESS_MS), label = "ring")
     Box(modifier.size(size), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(
-            progress = { (percent / 100f).coerceIn(0f, 1f) },
+            progress = { (animated / 100f).coerceIn(0f, 1f) },
             modifier = Modifier.size(size),
             color = color,
             trackColor = trackColor,
@@ -97,7 +105,10 @@ fun ProgressRing(
 
 enum class OptionState { Idle, Correct, Wrong }
 
-/** One of the four answer cards in learning and quiz questions. */
+/**
+ * One of the four answer cards in learning and quiz questions. It sinks a little when pressed,
+ * then pulses when right or shakes when wrong.
+ */
 @Composable
 fun OptionCard(
     text: String,
@@ -115,10 +126,25 @@ fun OptionCard(
         },
         label = "optionColor",
     )
+    val motion = rememberFeedbackMotion()
+    LaunchedEffect(state) {
+        when (state) {
+            OptionState.Correct -> motion.pulse()
+            OptionState.Wrong -> motion.shake()
+            OptionState.Idle -> Unit
+        }
+    }
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(if (pressed) 0.97f else 1f, tween(120), label = "optionPress")
     Card(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.heightIn(min = 140.dp).semantics { role = Role.Button },
+        interactionSource = interaction,
+        modifier = modifier
+            .feedbackMotion(motion) { pressScale }
+            .heightIn(min = 140.dp)
+            .semantics { role = Role.Button },
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = container,
@@ -150,3 +176,5 @@ fun SurfaceCard(
         Card(modifier = modifier, shape = shape, colors = colors, elevation = elevation) { content() }
     }
 }
+
+private const val PROGRESS_MS = 600

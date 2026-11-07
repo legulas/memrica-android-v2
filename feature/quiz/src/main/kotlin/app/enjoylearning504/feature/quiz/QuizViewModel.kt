@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import app.enjoylearning504.core.domain.platform.SoundEffect
+import app.enjoylearning504.core.domain.platform.SoundEffects
 import app.enjoylearning504.core.domain.quiz.QuizMode
 import app.enjoylearning504.core.domain.quiz.QuizState
 import app.enjoylearning504.core.domain.usecase.BuildQuizUseCase
@@ -39,6 +41,7 @@ class QuizViewModel(
     private val finishQuiz: FinishQuizUseCase,
     private val shouldShowInterstitial: ShouldShowInterstitialUseCase,
     private val setWordDifficult: SetWordDifficultUseCase,
+    private val sounds: SoundEffects,
     observeWords: ObserveWordsUseCase,
 ) : ViewModel() {
     val mode: QuizMode = savedStateHandle.toRoute<QuizDestination>().toMode()
@@ -58,6 +61,7 @@ class QuizViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     init {
+        sounds.prepare()
         viewModelScope.launch {
             _showAdOnExit.value = shouldShowInterstitial()
             _uiState.value = when (val availability = buildQuiz(mode)) {
@@ -74,8 +78,14 @@ class QuizViewModel(
             _uiState.update { playing.copy(quiz = next, showReadyCount = false) }
             return
         }
-        viewModelScope.launch { _uiState.value = QuizUiState.Finished(finishQuiz(next)) }
+        viewModelScope.launch {
+            _uiState.value = QuizUiState.Finished(finishQuiz(next))
+            sounds.play(SoundEffect.Complete)
+        }
     }
+
+    /** Feedback at the moment of the tap, before the answer is recorded. */
+    fun onChosen(correct: Boolean) = sounds.play(if (correct) SoundEffect.Correct else SoundEffect.Wrong)
 
     fun onDifficultChange(wordId: Int, difficult: Boolean) {
         viewModelScope.launch { setWordDifficult(wordId, difficult) }

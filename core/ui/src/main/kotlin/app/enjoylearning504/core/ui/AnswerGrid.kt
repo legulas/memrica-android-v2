@@ -18,6 +18,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import app.enjoylearning504.core.designsystem.component.OptionCard
@@ -31,6 +33,7 @@ import kotlinx.coroutines.delay
 /**
  * A word to translate and four answers. After a tap the choice is shown green or red (with the
  * right answer in green), then [onAnswered] runs. [questionKey] resets the feedback for a new question.
+ * [onChosen] runs right at the tap, for sound; the tap also gives a confirm or reject vibration.
  */
 @Composable
 fun AnswerGrid(
@@ -41,7 +44,9 @@ fun AnswerGrid(
     level: WordLevel?,
     onAnswered: (optionWordId: Int) -> Unit,
     modifier: Modifier = Modifier,
+    onChosen: (correct: Boolean) -> Unit = {},
 ) {
+    val haptics = LocalHapticFeedback.current
     var chosen by remember(questionKey) { mutableStateOf<Int?>(null) }
     LaunchedEffect(questionKey, chosen) {
         val picked = chosen ?: return@LaunchedEffect
@@ -73,7 +78,12 @@ fun AnswerGrid(
                         text = if (askInEnglish) option.persian else option.english,
                         state = state,
                         enabled = chosen == null,
-                        onClick = { chosen = option.id },
+                        onClick = {
+                            val correct = option.id == word.id
+                            chosen = option.id
+                            haptics.performHapticFeedback(if (correct) HapticFeedbackType.Confirm else HapticFeedbackType.Reject)
+                            onChosen(correct)
+                        },
                         modifier = Modifier.weight(1f),
                     )
                 }

@@ -1,6 +1,9 @@
 package app.enjoylearning504.feature.learning
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,9 +21,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
@@ -33,7 +39,9 @@ import app.enjoylearning504.core.designsystem.component.PrimaryButton
 import app.enjoylearning504.core.designsystem.component.ProgressBar
 import app.enjoylearning504.core.designsystem.component.SurfaceCard
 import app.enjoylearning504.core.designsystem.component.WordLevelIcon
+import app.enjoylearning504.core.designsystem.component.stepTransition
 import app.enjoylearning504.core.designsystem.theme.MemricaColors
+import app.enjoylearning504.core.domain.learning.LearningState
 import app.enjoylearning504.core.domain.learning.LearningStep
 import app.enjoylearning504.core.model.Word
 import app.enjoylearning504.core.model.WordLevel
@@ -54,6 +62,7 @@ fun LearningRoute(onExit: () -> Unit, viewModel: LearningViewModel = koinViewMod
         state = state,
         onContinue = viewModel::onContinue,
         onAnswer = viewModel::onAnswer,
+        onChosen = viewModel::onChosen,
         onPlay = viewModel::playWord,
         onSpeak = viewModel::speak,
         onBackToLesson = { exit(onExit) },
@@ -65,6 +74,7 @@ internal fun LearningScreen(
     state: LearningUiState,
     onContinue: () -> Unit,
     onAnswer: (Int) -> Unit,
+    onChosen: (Boolean) -> Unit,
     onPlay: (Word) -> Unit,
     onSpeak: (String) -> Unit,
     onBackToLesson: () -> Unit,
@@ -82,30 +92,54 @@ internal fun LearningScreen(
                     trackColor = MaterialTheme.colorScheme.surface,
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
-                when (val step = session?.step) {
-                    is LearningStep.Card -> CardStep(step.word, step.level, onPlay, onSpeak, onContinue)
-                    is LearningStep.SecondChanceCard -> CardStep(step.word, step.level, onPlay, onSpeak, onContinue)
-                    is LearningStep.Question -> AnswerGrid(
-                        questionKey = (session?.slots?.count { it.done } ?: 0) to step,
-                        word = step.word,
-                        options = step.options,
-                        askInEnglish = step.exercise.asksPersianAnswer,
-                        level = step.level,
-                        onAnswered = onAnswer,
-                    )
-                    is LearningStep.SecondChanceQuestion -> AnswerGrid(
-                        questionKey = (session?.totalMistakes ?: 0) to step,
-                        word = step.word,
-                        options = step.options,
-                        askInEnglish = true,
-                        level = step.level,
-                        onAnswered = onAnswer,
-                    )
-                    is LearningStep.Finished -> Finished(step.results, state.lessonId, onBackToLesson)
-                    null -> Finished(emptyList(), state.lessonId, onBackToLesson)
-                }
+                AnimatedContent(
+                    targetState = session,
+                    contentKey = { it?.stepKey() },
+                    transitionSpec = { stepTransition() },
+                    label = "learningStep",
+                ) { shown -> Step(shown, state.lessonId, onContinue, onAnswer, onChosen, onPlay, onSpeak, onBackToLesson) }
             }
         }
+    }
+}
+
+/** A step changes whenever the step or the counts behind it change; equal keys stay on screen. */
+private fun LearningState.stepKey(): Any = Triple(slots.count { it.done }, totalMistakes, step)
+
+@Composable
+private fun Step(
+    session: LearningState?,
+    lessonId: Int,
+    onContinue: () -> Unit,
+    onAnswer: (Int) -> Unit,
+    onChosen: (Boolean) -> Unit,
+    onPlay: (Word) -> Unit,
+    onSpeak: (String) -> Unit,
+    onBackToLesson: () -> Unit,
+) {
+    when (val step = session?.step) {
+        is LearningStep.Card -> CardStep(step.word, step.level, onPlay, onSpeak, onContinue)
+        is LearningStep.SecondChanceCard -> CardStep(step.word, step.level, onPlay, onSpeak, onContinue)
+        is LearningStep.Question -> AnswerGrid(
+            questionKey = (session?.slots?.count { it.done } ?: 0) to step,
+            word = step.word,
+            options = step.options,
+            askInEnglish = step.exercise.asksPersianAnswer,
+            level = step.level,
+            onAnswered = onAnswer,
+            onChosen = onChosen,
+        )
+        is LearningStep.SecondChanceQuestion -> AnswerGrid(
+            questionKey = (session?.totalMistakes ?: 0) to step,
+            word = step.word,
+            options = step.options,
+            askInEnglish = true,
+            level = step.level,
+            onAnswered = onAnswer,
+            onChosen = onChosen,
+        )
+        is LearningStep.Finished -> Finished(step.results, lessonId, onBackToLesson)
+        null -> Finished(emptyList(), lessonId, onBackToLesson)
     }
 }
 
@@ -130,10 +164,10 @@ private fun CardStep(
 @Composable
 private fun Finished(results: List<WordWithProgress>, lessonId: Int, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
-        results.chunked(2).forEach { row ->
+        results.chunked(2).forEachIndexed { rowIndex, row ->
             Row(Modifier.fillMaxWidth().padding(top = 12.dp)) {
-                row.forEach { item ->
-                    SurfaceCard(Modifier.weight(1f).padding(horizontal = 6.dp)) {
+                row.forEachIndexed { column, item ->
+                    SurfaceCard(Modifier.weight(1f).padding(horizontal = 6.dp).riseIn(order = rowIndex * 2 + column)) {
                         Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             WordLevelIcon(item.level, Modifier.size(56.dp))
                             Text(
@@ -159,5 +193,18 @@ private fun Finished(results: List<WordWithProgress>, lessonId: Int, onBack: () 
             onBack,
             Modifier.fillMaxWidth(),
         )
+    }
+}
+
+/** Fades and lifts the content in once, [order] steps after the first item. */
+@Composable
+private fun Modifier.riseIn(order: Int): Modifier {
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        progress.animateTo(1f, tween(durationMillis = 280, delayMillis = 60 * order.coerceAtMost(8)))
+    }
+    return graphicsLayer {
+        alpha = progress.value
+        translationY = (1f - progress.value) * 24.dp.toPx()
     }
 }

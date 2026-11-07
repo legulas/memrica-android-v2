@@ -1,5 +1,12 @@
 package app.enjoylearning504.feature.auth
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +32,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -39,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.enjoylearning504.core.designsystem.component.OtpField
 import app.enjoylearning504.core.designsystem.component.PrimaryButton
+import app.enjoylearning504.core.designsystem.component.stepTransition
 import app.enjoylearning504.core.designsystem.theme.MemricaColors
 import app.enjoylearning504.core.model.AppError
 import org.koin.compose.viewmodel.koinViewModel
@@ -96,20 +107,29 @@ internal fun AuthScreen(
                 }
                 Spacer(Modifier.height(24.dp))
                 Form(state, onPhone, onCode, onSubmit, onEditPhone, onResend)
-                state.error?.let {
-                    Text(
-                        stringResource(it.message()),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(top = 12.dp),
-                        textAlign = TextAlign.Center,
-                    )
+                // Keeps the last error on screen while it fades out
+                var lastError by remember { mutableStateOf(state.error) }
+                if (state.error != null) lastError = state.error
+                AnimatedVisibility(state.error != null, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+                    lastError?.let {
+                        Text(
+                            stringResource(it.message()),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 12.dp),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
                 Spacer(Modifier.height(20.dp))
-                if (state.isBusy) {
-                    CircularProgressIndicator(Modifier.size(40.dp))
-                } else {
-                    PrimaryButton(stringResource(state.submitLabel()), onSubmit, Modifier.fillMaxWidth())
+                Crossfade(state.isBusy, Modifier.fillMaxWidth(), label = "submit") { busy ->
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        if (busy) {
+                            CircularProgressIndicator(Modifier.size(40.dp))
+                        } else {
+                            PrimaryButton(stringResource(state.submitLabel()), onSubmit, Modifier.fillMaxWidth())
+                        }
+                    }
                 }
                 Spacer(Modifier.height(12.dp))
                 TextButton(onClick = onSkip, enabled = !state.isBusy) {
@@ -129,39 +149,54 @@ private fun Form(
     onEditPhone: () -> Unit,
     onResend: () -> Unit,
 ) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        when (state.step) {
-            AuthStep.EnterPhone -> PhoneField(state, onPhone, onSubmit)
-            AuthStep.EnterCode -> {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        stringResource(R.string.auth_code_sent_phone, state.phone),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f),
-                    )
-                    TextButton(onClick = onEditPhone) { Text(stringResource(R.string.auth_change)) }
-                }
-                val codeDescription = stringResource(R.string.auth_code)
-                OtpField(
-                    value = state.code,
-                    onValueChange = onCode,
-                    isError = state.fieldError == FieldError.Code || state.error == AppError.InvalidCode,
-                    enabled = !state.isBusy,
-                    autoFocus = true,
-                    onDone = onSubmit,
-                    modifier = Modifier.semantics { contentDescription = codeDescription },
-                )
-                if (state.fieldError == FieldError.Code) {
-                    Text(
-                        stringResource(R.string.auth_error_code_format),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-                ResendRow(state, onResend)
+    AnimatedContent(
+        targetState = state.step,
+        transitionSpec = { stepTransition(forward = targetState == AuthStep.EnterCode) },
+        label = "authStep",
+    ) { step ->
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            when (step) {
+                AuthStep.EnterPhone -> PhoneField(state, onPhone, onSubmit)
+                AuthStep.EnterCode -> CodeStep(state, onCode, onSubmit, onEditPhone, onResend)
             }
         }
     }
+}
+
+@Composable
+private fun CodeStep(
+    state: AuthUiState,
+    onCode: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onEditPhone: () -> Unit,
+    onResend: () -> Unit,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            stringResource(R.string.auth_code_sent_phone, state.phone),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = onEditPhone) { Text(stringResource(R.string.auth_change)) }
+    }
+    val codeDescription = stringResource(R.string.auth_code)
+    OtpField(
+        value = state.code,
+        onValueChange = onCode,
+        isError = state.fieldError == FieldError.Code || state.error == AppError.InvalidCode,
+        enabled = !state.isBusy,
+        autoFocus = true,
+        onDone = onSubmit,
+        modifier = Modifier.semantics { contentDescription = codeDescription },
+    )
+    if (state.fieldError == FieldError.Code) {
+        Text(
+            stringResource(R.string.auth_error_code_format),
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+    ResendRow(state, onResend)
 }
 
 /** Time left on the sent code, and resending once it has expired. */

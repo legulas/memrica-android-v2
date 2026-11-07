@@ -1,5 +1,12 @@
 package app.enjoylearning504.core.designsystem.component
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +51,7 @@ import app.enjoylearning504.core.designsystem.theme.MemricaColors
  * A one-time code entered into a row of [length] boxes. The caller keeps [value] to digits.
  * Boxes always run left to right, also in RTL layouts, because codes are read that way.
  * Marked as an SMS OTP field so the autofill service and keyboard can offer the code.
+ * Digits pop into their boxes, and the row shakes when [isError] turns on.
  */
 @Composable
 fun OtpField(
@@ -59,6 +67,8 @@ fun OtpField(
     val focusRequester = remember { FocusRequester() }
     var focused by remember { mutableStateOf(false) }
     if (autoFocus) LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    val motion = rememberFeedbackMotion()
+    LaunchedEffect(isError) { if (isError) motion.shake() }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         BasicTextField(
@@ -71,6 +81,7 @@ fun OtpField(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onDone() }),
             modifier = modifier
+                .feedbackMotion(motion)
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
                 .onFocusChanged { focused = it.isFocused }
@@ -102,18 +113,25 @@ fun OtpField(
 @Composable
 private fun OtpCell(digit: Char?, borderColor: Color, borderWidth: Dp, modifier: Modifier) {
     val shape = MaterialTheme.shapes.small
+    val border by animateColorAsState(borderColor, tween(150), label = "otpBorder")
     Box(
         modifier
             .width(52.dp)
             .height(60.dp)
             .background(MemricaColors.Surface, shape)
-            .border(borderWidth, borderColor, shape),
+            .border(borderWidth, border, shape),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            digit?.toString().orEmpty(),
-            style = MaterialTheme.typography.headlineSmall,
-            color = MemricaColors.TextStrong,
-        )
+        AnimatedContent(
+            targetState = digit,
+            transitionSpec = { (scaleIn(tween(160), initialScale = 0.5f) + fadeIn(tween(160))) togetherWith fadeOut(tween(80)) },
+            label = "otpDigit",
+        ) { shown ->
+            Text(
+                shown?.toString().orEmpty(),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MemricaColors.TextStrong,
+            )
+        }
     }
 }

@@ -1,5 +1,9 @@
 package app.enjoylearning504.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -37,6 +41,11 @@ fun MemricaNavHost(start: StartDestination, navController: NavHostController = r
             is StartDestination.AuthPrompt -> AuthPromptDestination(start.upgradedFromOldApp)
             StartDestination.Home -> HomeDestination
         },
+        // New screens slide in from the reading-direction end; going back reverses it
+        enterTransition = { slideIntoContainer(SlideDirection.Start, tween(NAV_MS)) { it / 5 } + fadeIn(tween(NAV_MS)) },
+        exitTransition = { slideOutOfContainer(SlideDirection.Start, tween(NAV_MS)) { it / 5 } + fadeOut(tween(NAV_MS)) },
+        popEnterTransition = { slideIntoContainer(SlideDirection.End, tween(NAV_MS)) { it / 5 } + fadeIn(tween(NAV_MS)) },
+        popExitTransition = { slideOutOfContainer(SlideDirection.End, tween(NAV_MS)) { it / 5 } + fadeOut(tween(NAV_MS)) },
     ) {
         authPromptScreen(onDone = {
             navController.navigate(HomeDestination) {
@@ -71,3 +80,5 @@ fun MemricaNavHost(start: StartDestination, navController: NavHostController = r
         infoDialogs(onClose = { navController.popBackStack() })
     }
 }
+
+private const val NAV_MS = 300

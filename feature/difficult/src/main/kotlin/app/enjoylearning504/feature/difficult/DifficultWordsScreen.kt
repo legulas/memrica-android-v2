@@ -121,15 +121,16 @@ internal fun DifficultWordsScreen(
                         )
                     }
                 }
-                items(words, key = { it.word.id }) { item -> DifficultRow(item, onWordClick, onRemove) }
+                // Removing a word slides the rows below up into its place
+                items(words, key = { it.word.id }) { item -> DifficultRow(item, onWordClick, onRemove, Modifier.animateItem()) }
             }
         }
     }
 }
 
 @Composable
-private fun DifficultRow(item: WordWithProgress, onWordClick: (Int) -> Unit, onRemove: (Int) -> Unit) {
-    SurfaceCard(Modifier.fillMaxWidth().padding(bottom = 6.dp), onClick = { onWordClick(item.word.id) }) {
+private fun DifficultRow(item: WordWithProgress, onWordClick: (Int) -> Unit, onRemove: (Int) -> Unit, modifier: Modifier = Modifier) {
+    SurfaceCard(modifier.fillMaxWidth().padding(bottom = 6.dp), onClick = { onWordClick(item.word.id) }) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             WordLevelIcon(item.level, Modifier.size(48.dp))
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
